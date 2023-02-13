@@ -1,5 +1,5 @@
 import sys
-from PyQt5.QtCore import Qt
+from PyQt5.QtCore import QUrl
 from PyQt5.QtWidgets import QApplication, QMainWindow, QLineEdit, QToolBar, QAction, QStatusBar, QVBoxLayout, QWidget
 from PyQt5.QtWebEngineWidgets import QWebEngineView, QWebEnginePage
 
@@ -45,15 +45,15 @@ class BrowserWindow(QMainWindow):
         url = self.url_bar.text()
         if not url.startswith("http"):
             url = "http://" + url
-        self.web_view.load(url)
+        self.web_view.load(QUrl(url))
 
     def _on_load_started(self):
         self.progress_bar.show()
 
     def _on_load_finished(self, success):
         self.progress_bar.hide()
-        if not success:
-            self.web_view.setHtml("Failed to load page")
+        # if not success:
+        #     self.web_view.setHtml("Failed to load page")
 
     def _update_url_bar(self, url):
         self.url_bar.setText(url.toString())
