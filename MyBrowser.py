@@ -1,69 +1,73 @@
 import sys
-from PyQt5.QtWidgets import QApplication, QMainWindow, QLineEdit, QToolBar, QAction, QVBoxLayout, QProgressBar
-from PyQt5.QtCore import Qt
-from PyQt5.QtWebEngineWidgets import QWebEngineView, QWebEngineProfile
+from PyQt5.QtCore import Qt, QUrl
+from PyQt5.QtWidgets import QApplication, QMainWindow, QLineEdit, QHBoxLayout, QVBoxLayout, QAction, QToolBar, QProgressBar
+from PyQt5.QtWebEngineWidgets import QWebEngineView, QWebEnginePage
 
-class MyBrowser(QMainWindow):
-    def __init__(self):
-        super().__init__()
 
-        # Create a QLineEdit for the address bar
+class WebEngineView(QWebEngineView):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+
+    def createWindow(self, windowType):
+        return self.parent().create_new_window()
+
+
+class BrowserWindow(QMainWindow):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+
+        self.central_widget = QWebEngineView()
+        self.setCentralWidget(self.central_widget)
+
         self.address_bar = QLineEdit()
-
-        # Create a QWebEngineView for displaying the web page
-        self.web_view = QWebEngineView()
-
-        # Connect the address bar to the web view's load function
         self.address_bar.returnPressed.connect(self.load_url)
 
-        # Create a progress bar
+        self.toolbar = QToolBar()
+        self.addToolBar(Qt.TopToolBarArea, self.toolbar)
+
+        self.back_button = QAction("<")
+        self.back_button.triggered.connect(self.central_widget.back)
+        self.toolbar.addAction(self.back_button)
+
+        self.forward_button = QAction(">")
+        self.forward_button.triggered.connect(self.central_widget.forward)
+        self.toolbar.addAction(self.forward_button)
+
+        self.toolbar.addWidget(self.address_bar)
+
         self.progress_bar = QProgressBar()
-        self.progress_bar.setVisible(False)
+        self.progress_bar.setRange(0, 100)
+        self.progress_bar.setAlignment(Qt.AlignCenter)
+        self.progress_bar.hide()
 
-        # Create a QToolBar and add the address bar, back button, and forward button
-        tool_bar = QToolBar()
-        tool_bar.addWidget(self.address_bar)
+        self.status_bar().addPermanentWidget(self.progress_bar)
+        self.central_widget.loadProgress.connect(self.update_progress)
 
-        back_action = QAction("<", self)
-        back_action.triggered.connect(self.web_view.back)
-        tool_bar.addAction(back_action)
-
-        forward_action = QAction(">", self)
-        forward_action.triggered.connect(self.web_view.forward)
-        tool_bar.addAction(forward_action)
-
-        # Add the tool bar and web view to the main window
-        layout = QVBoxLayout()
-        layout.addWidget(tool_bar)
-        layout.addWidget(self.web_view)
-        layout.addWidget(self.progress_bar)
-
-        central_widget = QMainWindow()
-        central_widget.setLayout(layout)
-        self.setCentralWidget(central_widget)
+        self.central_widget.urlChanged.connect(self.update_address_bar)
 
     def load_url(self):
-        url = self.address_bar.text()
-        if not url.startswith("http"):
-            url = "http://" + url
-        self.web_view.load(QUrl(url))
+        url = QUrl(self.address_bar.text())
+        self.central_widget.load(url)
 
-    def update_title(self):
-        title = self.web_view.page().title()
-        self.setWindowTitle("My Browser - " + title)
-
-    def update_url(self, url):
-        self.address_bar.setText(url.toString())
-        self.update_title()
-
-    def update_load_progress(self, progress):
-        self.progress_bar.setValue(progress)
+    def update_progress(self, progress):
         if progress == 100:
-            self.progress_bar.setVisible(False)
+            self.progress_bar.hide()
         else:
-            self.progress_bar.setVisible(True)
+            self.progress_bar.show()
+        self.progress_bar.setValue(progress)
 
-app = QApplication(sys.argv)
-browser = MyBrowser()
-browser.show()
-sys.exit(app.exec_())
+    def update_address_bar(self, url):
+        self.address_bar.setText(url.toString())
+        self.address_bar.setCursorPosition(0)
+
+    def create_new_window(self):
+        new_window = BrowserWindow()
+        new_window.show()
+        return new_window.central_widget
+
+
+if __name__ == "__main__":
+    app = QApplication(sys.argv)
+    window = BrowserWindow()
+    window.show()
+    sys.exit(app.exec_())
