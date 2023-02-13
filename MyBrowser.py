@@ -8,7 +8,8 @@ class BrowserWindow(QMainWindow):
         super().__init__()
 
         # Create a QWebEngineView to display the web content
-        self.web_view = QWebEngineView()
+        #self.web_view = QWebEngineView()
+        self.web_view = WebEngineView()
         self.setCentralWidget(self.web_view)
 
         # Create a URL address bar
@@ -26,7 +27,9 @@ class BrowserWindow(QMainWindow):
         # Add the URL address bar and the back and forward buttons to the toolbar
         toolbar = QToolBar()
         toolbar.addAction(self.back_button)
+        toolbar.addSeparator()
         toolbar.addAction(self.forward_button)
+        toolbar.addSeparator()
         toolbar.addWidget(self.url_bar)
         self.addToolBar(toolbar)
 
@@ -58,6 +61,13 @@ class BrowserWindow(QMainWindow):
     def _update_url_bar(self, url):
         self.url_bar.setText(url.toString())
         self.url_bar.setCursorPosition(0)
+
+
+class WebEngineView(QWebEngineView):
+
+    def createWindow(self, type: QWebEnginePage.WebWindowType) -> 'QWebEngineView':
+        #return super().createWindow(type)
+        return self 
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
