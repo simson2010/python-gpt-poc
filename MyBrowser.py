@@ -1,56 +1,65 @@
 import sys
-from PyQt5.QtCore import QUrl
-from PyQt5.QtWidgets import QApplication, QMainWindow, QLineEdit, QToolBar, QAction, QStatusBar, QProgressBar
+from PyQt5.QtCore import Qt
+from PyQt5.QtWidgets import QApplication, QMainWindow, QLineEdit, QToolBar, QAction, QStatusBar, QVBoxLayout, QWidget
 from PyQt5.QtWebEngineWidgets import QWebEngineView, QWebEnginePage
-
 
 class BrowserWindow(QMainWindow):
     def __init__(self):
         super().__init__()
 
-        self.line_edit = QLineEdit()
-        self.line_edit.returnPressed.connect(self.load_url)
+        # Create a QWebEngineView to display the web content
+        self.web_view = QWebEngineView()
+        self.setCentralWidget(self.web_view)
 
-        self.tool_bar = QToolBar()
-        self.addToolBar(self.tool_bar)
+        # Create a URL address bar
+        self.url_bar = QLineEdit()
+        self.url_bar.returnPressed.connect(self._load_url)
 
-        self.back_button = QAction("Back")
-        self.back_button.triggered.connect(self.web_engine_view.back)
-        self.tool_bar.addAction(self.back_button)
+        # Create a back button
+        self.back_button = QAction("<", self)
+        self.back_button.triggered.connect(self.web_view.back)
 
-        self.forward_button = QAction("Forward")
-        self.forward_button.triggered.connect(self.web_engine_view.forward)
-        self.tool_bar.addAction(self.forward_button)
+        # Create a forward button
+        self.forward_button = QAction(">", self)
+        self.forward_button.triggered.connect(self.web_view.forward)
 
-        self.tool_bar.addWidget(self.line_edit)
+        # Add the URL address bar and the back and forward buttons to the toolbar
+        toolbar = QToolBar()
+        toolbar.addAction(self.back_button)
+        toolbar.addAction(self.forward_button)
+        toolbar.addWidget(self.url_bar)
+        self.addToolBar(toolbar)
 
-        self.web_engine_view = QWebEngineView()
-        self.setCentralWidget(self.web_engine_view)
-        self.web_engine_view.loadFinished.connect(self.update_url)
+        # Create a progress bar and add it to the status bar
+        self.progress_bar = QStatusBar()
+        self.setStatusBar(self.progress_bar)
 
-        self.status_bar = QStatusBar()
-        self.setStatusBar(self.status_bar)
+        # Connect the loadStarted and loadFinished signals to the appropriate slots
+        self.web_view.loadStarted.connect(self._on_load_started)
+        self.web_view.loadFinished.connect(self._on_load_finished)
 
-        self.progress_bar = QProgressBar()
-        self.progress_bar.setRange(0, 100)
-        self.status_bar.addPermanentWidget(self.progress_bar)
+        # Connect the urlChanged signal to the _update_url_bar slot
+        self.web_view.page().urlChanged.connect(self._update_url_bar)
 
-        self.web_engine_view.loadProgress.connect(self.update_progress)
-
-    def load_url(self):
-        url = self.line_edit.text()
+    def _load_url(self):
+        url = self.url_bar.text()
         if not url.startswith("http"):
             url = "http://" + url
-        self.web_engine_view.setUrl(QUrl(url))
+        self.web_view.load(url)
 
-    def update_url(self):
-        self.line_edit.setText(self.web_engine_view.url().toString())
+    def _on_load_started(self):
+        self.progress_bar.show()
 
-    def update_progress(self, progress):
-        self.progress_bar.setValue(progress)
+    def _on_load_finished(self, success):
+        self.progress_bar.hide()
+        if not success:
+            self.web_view.setHtml("Failed to load page")
 
+    def _update_url_bar(self, url):
+        self.url_bar.setText(url.toString())
+        self.url_bar.setCursorPosition(0)
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     app = QApplication(sys.argv)
     browser = BrowserWindow()
     browser.show()
