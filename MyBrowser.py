@@ -40,14 +40,20 @@ class BrowserWindow(QMainWindow):
         self.progress_bar.setAlignment(Qt.AlignCenter)
         self.progress_bar.hide()
 
+        self.status_bar = self.statusBar()
+        self.url_bar = QLineEdit()
+        self.url_bar.returnPressed.connect(self.load_url)
+        self.status_bar.addWidget(self.url_bar)
+
+
         self.status_bar().addPermanentWidget(self.progress_bar)
         self.central_widget.loadProgress.connect(self.update_progress)
 
         self.central_widget.urlChanged.connect(self.update_address_bar)
 
     def load_url(self):
-        url = QUrl(self.address_bar.text())
-        self.central_widget.load(url)
+        url = self.url_bar.text()
+        self.web_engine_view.load(QUrl(url))
 
     def update_progress(self, progress):
         if progress == 100:
