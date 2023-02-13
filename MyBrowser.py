@@ -64,11 +64,18 @@ class BrowserWindow(QMainWindow):
 
 
 class WebEngineView(QWebEngineView):
+    windows = []
 
     def createWindow(self, type: QWebEnginePage.WebWindowType) -> 'QWebEngineView':
         #return super().createWindow(type)
-        return self 
-
+        #newTab = WebEngineView()
+        print("[createWindow][from][WebEngineView]")
+        newWindow = BrowserWindow()        
+        self.windows.append(newWindow)
+        newWindow.show()
+        print("list length {leng}".format(leng=len(self.windows))  )
+        return newWindow.web_view
+    
 if __name__ == '__main__':
     app = QApplication(sys.argv)
     browser = BrowserWindow()
