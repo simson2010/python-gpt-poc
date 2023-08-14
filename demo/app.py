@@ -6,5 +6,6 @@ def createDataFrame():
   df = pd.DataFrame(data, columns=['name', 'value', 'key', 'values'])
   return df
 
-df = createDataFrame()
-print(df)
+if __name__ == '__main__':
+  df = createDataFrame()
+  print(df)
