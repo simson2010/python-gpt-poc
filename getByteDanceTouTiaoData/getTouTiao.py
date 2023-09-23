@@ -8,10 +8,7 @@ url = "https://www.toutiao.com/?channel=follow&source=tuwen_detail&wid=169549802
 
 def run():
     global driver
-    # 配置浏览器驱动，这里以Chrome为例
-    options = webdriver.ChromeOptions()
-    options.add_argument('--disable-gpu')  # 禁用GPU加速
-
+                            
     # 配置浏览器驱动，这里以Chrome为例
     driver = webdriver.Chrome()  # 需要提前下载和配置Chrome驱动，并指定其路径
 
